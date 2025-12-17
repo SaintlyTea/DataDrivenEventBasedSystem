@@ -106,4 +106,4 @@ A more formal “Core Concepts” document will be added once the core system is
 
 ## License
 
-To be decided.
+Licensed under the Apache License, Version 2.0
