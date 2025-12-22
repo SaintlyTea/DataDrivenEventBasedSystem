@@ -134,4 +134,5 @@ A more formal “Core Concepts” document will be added once the core system is
 
 ## License
 
+Copyright 2025 SaintlyTea
 Licensed under the Apache License, Version 2.0
