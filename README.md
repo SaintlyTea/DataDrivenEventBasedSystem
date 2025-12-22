@@ -80,14 +80,42 @@ They are not intended to become a complete engine or a full production pipeline.
 ---
 
 ## Language and Future Direction
+The system is currently developed in **Godot (GDScript)** as a reference implementation.
 
-The system is currently being developed in **Godot (GDScript)** for fast iteration.
+A decision has been made to **progressively rewrite the core system in C++**.  
+This repository will gradually transition toward a C++ codebase, replacing GDScript components step by step as the architecture stabilizes.
 
-Once the design reaches a sufficiently stable and proven state (criteria not yet defined), it is being considered to either:
-- rewrite the system in **C++**, or
-- create a separate C++ repository implementing the same core ideas
+Once the rewrite is complete, a **thin integration layer** will be introduced to connect the C++ backend to **Godot**, which will be used exclusively for:
+- UI examples
+- input handling
+- visual and interaction-driven demonstrations
 
-No decision has been finalized yet.
+The long-term goal is to keep the **core system engine-agnostic**, with Godot acting only as a presentation and interaction layer.
+
+### Why C++
+The decision to move the core system to **C++** is driven by long-term goals rather than immediate necessity.
+
+The system is intended to serve as a **general-purpose, engine-agnostic backend** for turn-based (and potentially other) systems. C++ provides:
+- greater control over performance and memory,
+- broader applicability outside of Godot,
+- easier reuse in other engines or standalone simulations,
+- and a more stable foundation for complex, long-lived systems.
+
+Godot will remain part of the project, but only as a **presentation and integration layer** rather than the owner of the core logic.
+
+### Transition Strategy
+The repository is currently in an **incomplete and non-functional state**, which allows the rewrite to proceed without the need for strict backward compatibility.
+
+During the transition:
+- Existing **GDScript files will only be removed or deprecated once a corresponding C++ implementation exists**, either as:
+    - a matching `.h` / `.cpp` pair, or
+    - a clearly documented C++ module implementing the same logic.
+- Until then, GDScript code may remain as a **reference implementation** or conceptual guide.
+- Mixed-language coexistence is expected temporarily and is considered intentional.
+
+The end goal is a **clean separation** between:
+- a reusable C++ core system, and
+- an optional Godot-based frontend.
 
 ---
 
