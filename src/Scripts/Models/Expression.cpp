@@ -74,7 +74,6 @@ std::vector<std::string> Expression::tokenize_() const
             continue;
         }
 
-        // operators / parensethes
         if (is_op_(ch) || ch == '(' || ch == ')') {
             tokens.emplace_back(1, ch);
             ++i;
