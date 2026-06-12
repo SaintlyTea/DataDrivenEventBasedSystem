@@ -2,7 +2,8 @@
 
 A work-in-progress **data-driven, event-based gameplay system**, primarily intended as a foundation for **turn-based games**.
 
-This repository contains the core system logic written in **C++**, with **Godot (GDExtension)** planned as the frontend layer. It is **not a complete game** and **not a full engine**.
+This repository contains the system and a set of **small example datasets and demos** to show how it can be used (combat, UI, input, etc.).  
+It is **not a complete game** and **not a full engine**.
 
 ---
 
@@ -10,10 +11,10 @@ This repository contains the core system logic written in **C++**, with **Godot 
 
 This project is actively under development.
 
-- The current codebase is **incomplete and unstable**
-- APIs, naming, and internal structures are subject to change
-- Some parts are experimental or partially implemented
-- A stable and fully documented release does not exist yet
+- The current codebase is **incomplete and unstable**.
+- APIs, naming, and internal structures are subject to change.
+- Some parts are experimental or partially implemented.
+- A stable and fully documented release does **not** exist yet.
 
 If you are looking for a production-ready library: this is not it (yet).
 
@@ -21,69 +22,85 @@ If you are looking for a production-ready library: this is not it (yet).
 
 ## Goal
 
-The main goal is to provide a reusable base for games where gameplay logic is expressed through **data and events** instead of hard-coded, tightly coupled systems.
+The main goal is to provide a reusable base for games where gameplay logic is expressed through **data + events** instead of hard-coded, tightly coupled systems.
 
 The system aims to make it easier to:
-- Add or change abilities, events, characters, and interactions by editing data files
+- Add or change abilities, events, characters, and interactions by editing data and adding event types
 - Keep complex gameplay logic maintainable as it grows
-- Build gameplay features that remain testable and understandable
+- Build gameplay features in a way that remains testable and understandable
 
-The design is intended to be generic enough to support multiple game types, with turn-based gameplay as the primary target.
+While the main focus is turn-based gameplay, the design may later be extended for other game types (e.g. tick-based) or even non-game systems.
 
 ---
 
 ## Non-Goals
 
 This project does **not** aim to:
-- Be a complete game or playable product
+- Be a complete game or a playable product
 - Replace existing game engines (Godot, Unity, Unreal, etc.)
-- Provide a polished editor or production-level content workflows
-- Guarantee performance optimizations at this stage — correctness and clarity come first
+- Provide a polished editor experience or production-level content workflows
+- Guarantee performance optimizations at this stage (correctness and clarity come first)
 
 ---
 
-## Building
+## Example (High-Level): Firebolt
 
-### Requirements
+To make the intent concrete, here is a simplified example of how gameplay behavior is meant to be expressed.
 
-Install via [Chocolatey](https://chocolatey.org/):
-```powershell
-choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System' -y
-choco install mingw -y
-choco install ninja -y
-```
+**Firebolt** is an ability implemented as a **composite event** (specifically a *Sequence*):
+- _DealDamage_
+- _ApplyStatusEffect_ (Burning / damage-over-time)
 
-### Configure and Build
+**Flow (simplified):**
+1. Player casts Firebolt (target chosen).
+2. The system emits an announcement trigger:  
+   _OnAbilityCastAnnounced_
+3. All events that react to the announcement (and meet their requirements) are enqueued.
+4. The Firebolt event itself is enqueued.
+5. The queue is processed deterministically.
+6. When Firebolt executes, it expands into its child events:
+   - _DealDamage_
+   - _ApplyStatusEffect_
+   These child events are executed as an uninterrupted chain (no unrelated events between them).
 
-```powershell
-cmake --preset mingw-gcc-ninja
-cmake --build build/mingw-gcc-ninja
-```
-
-### Run Tests
-
-```powershell
-cmake --build build/mingw-gcc-ninja --target tests
-./build/mingw-gcc-ninja/tests.exe --success
-```
-
-Dependencies (currently only [Catch2](https://github.com/catchorg/Catch2)) are fetched automatically by CMake via `FetchContent` — no manual installation needed.
+This example is intentionally small. The repository will later include concrete datasets and tests demonstrating it.
 
 ---
 
-## Language and Architecture
+## Examples and Demos (Why UI/Input/Assets exist here)
 
-The system is written in **C++20** with **Godot (GDExtension)** planned as the rendering and input frontend. The C++ backend is designed to have zero Godot dependencies, keeping the core logic portable and independently testable.
+To validate that the system can actually drive gameplay, the repo will include minimal demo scaffolding such as:
+- basic input handling
+- minimal UI rendering for example screens
+- lightweight asset/data loading required for demos
 
-Game and ability data will eventually be loaded from **JSON documents**, making it possible to define characters, abilities, and events without modifying code.
+These exist to **run small tests and examples** and to observe the system in action.  
+They are not intended to become a complete engine or a full production pipeline.
+
+---
+
+## Language and Future Direction
+
+The system is currently being developed in **Godot (GDScript)** for fast iteration.
+
+Once the design reaches a sufficiently stable and proven state (criteria not yet defined), it is being considered to either:
+- rewrite the system in **C++**, or
+- create a separate C++ repository implementing the same core ideas
+
+No decision has been finalized yet.
 
 ---
 
 ## Documentation
 
-See [`ARCHITECTURE.md`](ARCHITECTURE.md) for an overview of the core systems and how they relate.
+Documentation will be written incrementally as the system stabilizes.
 
-Design decisions are documented incrementally as the system stabilizes. A more formal reference will be added once the core is stable enough that it won't become outdated weekly.
+At this stage, documentation focuses on:
+- goals and boundaries
+- example scenarios
+- design decisions (as they arise)
+
+A more formal “Core Concepts” document will be added once the core system is stable enough that the explanations won’t become outdated every week.
 
 ---
 
