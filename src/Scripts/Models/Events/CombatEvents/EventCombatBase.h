@@ -39,7 +39,6 @@ public:
     virtual ~EventCombatBase() = default;
 
 protected:
-    // Downcast context and forward to combat-specific override
     void execute_(const EventContext& ctx) override;
     virtual void execute_combat_(const EventCombatContext& ctx) {}
 };
