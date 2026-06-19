@@ -16,8 +16,7 @@ EventCombatBase::EventCombatBase(
     int pDurationTurnsLeft,
     int pCdTurnsLeft,
     int pCdBase)
-    : EventBase(pId, pName, pSource, pConditionString, pTags),
-      trigger(pTrigger),
+    : EventBase(pId, pName, pSource, pTrigger, pConditionString, pTags),
       enabled_stacks(pEnableStacks),
       max_stacks(pMaxStacks),
       current_stacks(pCurrentStacks),

@@ -5,7 +5,6 @@
 #include <regex>
 
 namespace {
-    // Function-local statics: initialized once, on first use (thread-safe since C++11).
     std::unordered_map<std::string, std::weak_ptr<Expression>> pool;
     bool normalize = true;
 }
@@ -27,12 +26,10 @@ std::shared_ptr<Expression> ExpressionStore::get_or_create(const std::string& sr
 {
     const std::string key = norm_(src);
 
-    // If exists and still alive -> return existing
     if (auto it = pool.find(key); it != pool.end()) 
         if (auto existing = it->second.lock()) 
             return existing;
 
-    // Create new and store weak ref
     auto created = std::make_shared<Expression>(src);
     pool[key] = created;
     return created;

@@ -4,11 +4,13 @@ EventBase::EventBase(
     std::string pId,
     std::string pName,
     std::string pSource,
+    std::string pTrigger,
     std::string pConditionString,
     std::vector<std::string> pTags)
     : id(pId),
       name(pName),
       source(pSource),
+      trigger(pTrigger),
       conditions_(ExpressionStore::get_or_create(pConditionString)),
       tags(pTags)
 {}
