@@ -1,7 +1,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <vector>
 
-#include "Scripts/Handlers/EventQueueProcessor.h"
+#include "Scripts/Handlers/EventQueueHandler.h"
 #include "Scripts/Models/EventOpQueue.h"
 #include "Scripts/Models/EventContext/EventContext.h"
 #include "Scripts/Models/Events/EventBase.h"
@@ -14,7 +14,7 @@ public:
     std::vector<int>& execution_log;
 
     TrackingEvent(int id, std::vector<int>& log)
-        : EventBase("", "", "", ""), id(id), execution_log(log)
+        : EventBase("", "", "", "", ""), id(id), execution_log(log)
     {}
 
 protected:
@@ -32,7 +32,7 @@ static EventContext make_ctx()
 // ===========================
 // Basic execution
 // ===========================
-TEST_CASE("Processor - single FIFO event executes", "[processor]")
+TEST_CASE("Handler - single FIFO event executes", "[handler]")
 {
     std::vector<int> log;
     TrackingEvent e(1, log);
@@ -40,14 +40,14 @@ TEST_CASE("Processor - single FIFO event executes", "[processor]")
     EventOpQueue q;
     q.push_normal_op(&e);
 
-    EventQueueProcessor processor;
-    processor.process(q, make_ctx());
+    EventQueueHandler handler;
+    handler.process(q, make_ctx());
 
     REQUIRE(log.size() == 1);
     REQUIRE(log[0] == 1);
 }
 
-TEST_CASE("Processor - multiple FIFO events execute in order", "[processor]")
+TEST_CASE("Handler - multiple FIFO events execute in order", "[handler]")
 {
     std::vector<int> log;
     TrackingEvent e1(1, log), e2(2, log), e3(3, log);
@@ -57,13 +57,13 @@ TEST_CASE("Processor - multiple FIFO events execute in order", "[processor]")
     q.push_normal_op(&e2);
     q.push_normal_op(&e3);
 
-    EventQueueProcessor processor;
-    processor.process(q, make_ctx());
+    EventQueueHandler handler;
+    handler.process(q, make_ctx());
 
     REQUIRE(log == std::vector<int>{1, 2, 3});
 }
 
-TEST_CASE("Processor - LIFO events execute before FIFO", "[processor]")
+TEST_CASE("Handler - LIFO events execute before FIFO", "[handler]")
 {
     std::vector<int> log;
     TrackingEvent e1(1, log), e2(2, log), e3(3, log), e4(4, log);
@@ -74,18 +74,18 @@ TEST_CASE("Processor - LIFO events execute before FIFO", "[processor]")
     q.push_barrier_op(&e3);
     q.push_barrier_op(&e4);
 
-    EventQueueProcessor processor;
-    processor.process(q, make_ctx());
+    EventQueueHandler handler;
+    handler.process(q, make_ctx());
 
     REQUIRE(log == std::vector<int>{4, 3, 1, 2});
 }
 
-TEST_CASE("Processor - empty queue processes without error", "[processor]")
+TEST_CASE("Handler - empty queue processes without error", "[handler]")
 {
     EventOpQueue q;
-    EventQueueProcessor processor;
+    EventQueueHandler handler;
 
-    REQUIRE_NOTHROW(processor.process(q, make_ctx()));
+    REQUIRE_NOTHROW(handler.process(q, make_ctx()));
 }
 
 // ===========================
@@ -102,7 +102,7 @@ public:
     EventOpQueue& queue;
 
     InjectingEvent(int id, std::vector<int>& log, EventBase* inject, EventOpQueue& q)
-        : EventBase("", "", "", ""), id(id), execution_log(log), to_inject(inject), queue(q)
+        : EventBase("", "", "", "", ""), id(id), execution_log(log), to_inject(inject), queue(q)
     {}
 
 protected:
@@ -114,7 +114,7 @@ protected:
     }
 };
 
-TEST_CASE("Processor - mid-process barrier injection executes before remaining FIFO", "[processor]")
+TEST_CASE("Handler - mid-process barrier injection executes before remaining FIFO", "[handler]")
 {
     std::vector<int> log;
     EventOpQueue q;
@@ -126,8 +126,8 @@ TEST_CASE("Processor - mid-process barrier injection executes before remaining F
     q.push_normal_op(&e1);
     q.push_normal_op(&e2);
 
-    EventQueueProcessor processor;
-    processor.process(q, make_ctx());
+    EventQueueHandler handler;
+    handler.process(q, make_ctx());
 
     // e1 runs, injects e3 as barrier, e3 runs before e2
     REQUIRE(log == std::vector<int>{1, 3, 2});

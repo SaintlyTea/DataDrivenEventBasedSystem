@@ -9,8 +9,6 @@
 class EventCombatBase : public EventBase
 {
 public:
-    const std::string trigger;
-
     bool enabled_stacks{false};
     int max_stacks{-1};
     int current_stacks{0};
