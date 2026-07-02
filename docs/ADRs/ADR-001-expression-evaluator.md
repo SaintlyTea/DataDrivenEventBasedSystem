@@ -12,7 +12,7 @@ Events and effects need a way to define activation conditions that is readable, 
 
 ## Decision
 
-Implement a lazy postfix expression evaluator. Conditions are written as infix strings using symbolic operators:
+Implement a lazy postfix expression evaluator, defining a small domain-specific language (DSL) scoped entirely to boolean condition evaluation. Conditions are written as infix strings using symbolic operators:
 
 - `*` → AND
 - `+` → OR
@@ -39,6 +39,7 @@ The evaluation callback (`eval_atom`) is injected rather than hard-coded, keepin
 - The expression system has no knowledge of what an atom's value means — that interpretation is fully delegated to whatever resolves `eval_atom`, keeping this layer stable even as the resolution strategy evolves
 - Malformed expressions fail at load time rather than silently at runtime
 - Complex nested conditions can be hard to read; tooling support may be needed later
+- This establishes a precedent for small, narrowly-scoped DSLs within the system where a generic data format would be insufficient; later decisions that introduce a similar small syntax for a different purpose follow this same pattern rather than introducing a new kind of complexity (Still to consider, but at least similar)
 
 ---
 
