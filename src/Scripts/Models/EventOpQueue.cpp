@@ -36,7 +36,7 @@ EventBase* EventOpQueue::pop_next()
         fifo_.pop_front();
         return event;
     }
-    throw std::runtime_error("pop_next called on empty queue");
+    throw std::runtime_error("pop_next called on empty queue"); // TODO: Runtime Error is too serious, maybe log a warning and continue
 }
 
 bool EventOpQueue::is_empty() const

@@ -11,7 +11,7 @@ class Expression
 private:
     std::vector<std::string> postfix_{};
     const std::string src_;
-
+    // Temporary fix/filler for global state manager or other solutions
     using EvalAtomFn = std::function<bool(const std::string&, const std::string&, const EventContext&)>;
 
     static EvalAtomFn eval_atom_;
@@ -21,7 +21,9 @@ private:
     std::pair<std::string, std::string> parse_atom_(const std::string& tok) const;
     int precedence_(char op) const;
     bool is_op_(char c) const;
+
     std::vector<std::string> tokenize_() const;
+
     std::vector<std::string> infix_to_postfix_(const std::vector<std::string>& tokens) const;
 
 public:

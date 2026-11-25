@@ -17,12 +17,14 @@ public:
     const std::string id;
     const std::string name;
     const std::string source;
+    const std::string trigger;
     const std::vector<std::string> tags;
 
     EventBase(
         std::string pId,
         std::string pName,
         std::string pSource,
+        std::string pTrigger,
         std::string pConditionString,
         std::vector<std::string> pTags = {});
 

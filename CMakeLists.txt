@@ -20,19 +20,19 @@ add_executable(data_driven_event_based_system
     src/Scripts/Models/Expression.cpp
     src/Scripts/Models/EventOpQueue.cpp
     src/Scripts/States/ExpressionStore.cpp
-    src/Scripts/Handlers/EventQueueProcessor.cpp)
+    src/Scripts/Handlers/EventQueueHandler.cpp)
 
 add_executable(tests
     src/Scripts/Models/Events/EventBase.cpp
     src/Tests/ExpressionTests.cpp
     src/Tests/EventOpQueueTests.cpp
     src/Tests/ContextPayloadTests.cpp
-    src/Tests/EventQueueProcessorTests.cpp
+    src/Tests/EventQueueHandlerTests.cpp
     src/Scripts/Models/EventContext/EventContext.cpp
     src/Scripts/Models/Expression.cpp
     src/Scripts/Models/EventOpQueue.cpp
     src/Scripts/States/ExpressionStore.cpp
-    src/Scripts/Handlers/EventQueueProcessor.cpp)
+    src/Scripts/Handlers/EventQueueHandler.cpp)
 
 target_link_libraries(tests PRIVATE Catch2::Catch2WithMain)
 target_include_directories(tests PRIVATE src)

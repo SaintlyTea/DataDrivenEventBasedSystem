@@ -1,4 +1,4 @@
-#include "Scripts/Models/Events/CombatEvents/ApplyStatusEffect.h"
+#include "Scripts/Models/Events/CombatEvents/Effects/ApplyStatusEffect.h"
 #include "Scripts/Models/EventContext/Combat/EventCombatContext.h"
 #include "Scripts/Models/Expression.h"
 

@@ -6,7 +6,6 @@
 #include "Scripts/States/ExpressionStore.h"
 
 // Controllable eval_atom for testing
-// We define it here so tests can set which atoms return true or false
 static std::unordered_map<std::string, bool> atom_results;
 
 static struct ExpressionTestSetup {
@@ -15,11 +14,11 @@ static struct ExpressionTestSetup {
             std::string key = type + ":" + value;
             auto it = atom_results.find(key);
             if (it != atom_results.end()) return it->second;
-            return false;
+            // In case of testing short circuiting, it should show an error
+            REQUIRE(false);
         });
     }
 } expression_test_setup;
-
 
 // Helper to keep tests readable
 static void set_atom(std::string type, std::string value, bool result)
@@ -123,6 +122,9 @@ TEST_CASE("OR - left false right true", "[expression]")
 TEST_CASE("OR - both false", "[expression]")
 {
     clear_atoms();
+    set_atom("A", "1", false);
+    set_atom("B", "2", false);
+
     auto expr = ExpressionStore::get_or_create("{\"A\",\"1\"} + {\"B\",\"2\"}");
     REQUIRE(expr->evaluate(make_ctx()) == false);
 }
@@ -141,6 +143,7 @@ TEST_CASE("NOT - negates true to false", "[expression]")
 TEST_CASE("NOT - negates false to true", "[expression]")
 {
     clear_atoms();
+    set_atom("A", "1", false);
     auto expr = ExpressionStore::get_or_create("-{\"A\",\"1\"}");
     REQUIRE(expr->evaluate(make_ctx()) == true);
 }
@@ -151,6 +154,8 @@ TEST_CASE("NOT - negates false to true", "[expression]")
 TEST_CASE("Compound - (A AND B) OR C, only C true", "[expression]")
 {
     clear_atoms();
+    set_atom("A", "1", false);
+    set_atom("B", "2", false);
     set_atom("C", "3", true);
     auto expr = ExpressionStore::get_or_create("({\"A\",\"1\"} * {\"B\",\"2\"}) + {\"C\",\"3\"}");
     REQUIRE(expr->evaluate(make_ctx()) == true);

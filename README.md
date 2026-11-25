@@ -1,106 +1,81 @@
 # DataDrivenEventBasedSystem
 
-A work-in-progress **data-driven, event-based gameplay system**, primarily intended as a foundation for **turn-based games**.
+A data-driven, event-based backend for turn-based games, written in C++ and designed to be reusable across projects.
 
-This repository contains the system and a set of **small example datasets and demos** to show how it can be used (combat, UI, input, etc.).  
-It is **not a complete game** and **not a full engine**.
+> This project is a work in progress. APIs and structures are subject to change, and a stable release does not exist yet.
 
 ---
 
-## Work in Progress
+## How It Works
 
-This project is actively under development.
+Gameplay behavior is defined through events. Each event has a trigger, a set of conditions, and logic that executes when those conditions are met. When something happens in the game — an attack, a status effect, a turn starting — a trigger is emitted. Every event listening to that trigger evaluates its conditions and, if they pass, queues its work. A handler then runs the queue deterministically, with the ability to inject high-priority operations mid-run.
 
-- The current codebase is **incomplete and unstable**.
-- APIs, naming, and internal structures are subject to change.
-- Some parts are experimental or partially implemented.
-- A stable and fully documented release does **not** exist yet.
+Event types are defined in code. Game objects such as characters and abilities are stored as JSON documents and loaded at runtime, using the existing event definitions to construct the objects with their configured data.
 
-If you are looking for a production-ready library: this is not it (yet).
+This is a backend only. It contains no frontend or rendering layer. An example of how to couple it with Godot via GDExtension may be provided later.
+
+---
+
+## Example: Firebolt
+
+Firebolt is a composite ability made up of two events: DealDamage and ApplyStatusEffect (Burning).
+
+1. The player casts Firebolt on a target.
+2. A trigger `OnAbilityCastAnnounced` is emitted.
+3. Any events reacting to that trigger and meeting their conditions are queued.
+4. Firebolt itself is queued.
+5. The processor begins running the queue.
+6. When Firebolt executes, it expands into its child events and pushes them as high-priority operations, so they run consecutively before anything else.
+7. DealDamage executes.
+8. ApplyStatusEffect executes, applying Burning to the target.
+9. The processor continues with whatever remains in the queue.
 
 ---
 
 ## Goal
 
-The main goal is to provide a reusable base for games where gameplay logic is expressed through **data + events** instead of hard-coded, tightly coupled systems.
+To provide a reusable backend for turn-based games where gameplay logic lives in data and events rather than tightly coupled code. New abilities, mechanics, and interactions should be expressible by defining new event types or data files, not by modifying the core system.
 
-The system aims to make it easier to:
-- Add or change abilities, events, characters, and interactions by editing data and adding event types
-- Keep complex gameplay logic maintainable as it grows
-- Build gameplay features in a way that remains testable and understandable
-
-While the main focus is turn-based gameplay, the design may later be extended for other game types (e.g. tick-based) or even non-game systems.
+The design is generic enough to potentially support other game types or non-game systems that benefit from deterministic event-driven logic.
 
 ---
 
 ## Non-Goals
 
-This project does **not** aim to:
-- Be a complete game or a playable product
-- Replace existing game engines (Godot, Unity, Unreal, etc.)
-- Provide a polished editor experience or production-level content workflows
-- Guarantee performance optimizations at this stage (correctness and clarity come first)
+- A complete game or playable product
+- A replacement for existing game engines (Godot, Unity, Unreal, etc.)
+- A polished editor or content pipeline
+- Performance optimization at this stage — correctness and clarity come first
 
 ---
 
-## Example (High-Level): Firebolt
+## Building
 
-To make the intent concrete, here is a simplified example of how gameplay behavior is meant to be expressed.
+### Requirements
 
-**Firebolt** is an ability implemented as a **composite event** (specifically a *Sequence*):
-- _DealDamage_
-- _ApplyStatusEffect_ (Burning / damage-over-time)
+Install via [Chocolatey](https://chocolatey.org/):
 
-**Flow (simplified):**
-1. Player casts Firebolt (target chosen).
-2. The system emits an announcement trigger:  
-   _OnAbilityCastAnnounced_
-3. All events that react to the announcement (and meet their requirements) are enqueued.
-4. The Firebolt event itself is enqueued.
-5. The queue is processed deterministically.
-6. When Firebolt executes, it expands into its child events:
-   - _DealDamage_
-   - _ApplyStatusEffect_
-   These child events are executed as an uninterrupted chain (no unrelated events between them).
+```powershell
+choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System' -y
+choco install mingw -y
+choco install ninja -y
+```
 
-This example is intentionally small. The repository will later include concrete datasets and tests demonstrating it.
+### Configure and Build
 
----
+```powershell
+cmake --preset mingw-gcc-ninja
+cmake --build build/mingw-gcc-ninja
+```
 
-## Examples and Demos (Why UI/Input/Assets exist here)
+### Run Tests
 
-To validate that the system can actually drive gameplay, the repo will include minimal demo scaffolding such as:
-- basic input handling
-- minimal UI rendering for example screens
-- lightweight asset/data loading required for demos
+```powershell
+cmake --build build/mingw-gcc-ninja --target tests
+./build/mingw-gcc-ninja/tests.exe --success
+```
 
-These exist to **run small tests and examples** and to observe the system in action.  
-They are not intended to become a complete engine or a full production pipeline.
-
----
-
-## Language and Future Direction
-
-The system is currently being developed in **Godot (GDScript)** for fast iteration.
-
-Once the design reaches a sufficiently stable and proven state (criteria not yet defined), it is being considered to either:
-- rewrite the system in **C++**, or
-- create a separate C++ repository implementing the same core ideas
-
-No decision has been finalized yet.
-
----
-
-## Documentation
-
-Documentation will be written incrementally as the system stabilizes.
-
-At this stage, documentation focuses on:
-- goals and boundaries
-- example scenarios
-- design decisions (as they arise)
-
-A more formal “Core Concepts” document will be added once the core system is stable enough that the explanations won’t become outdated every week.
+[Catch2](https://github.com/catchorg/Catch2) is used as the testing framework and will be downloaded automatically by CMake during the build. No manual installation is needed.
 
 ---
 

@@ -8,7 +8,7 @@ class TestEvent : public EventBase
 public:
     int id;
     TestEvent(int id) 
-        : EventBase("", "", "", ""), id(id) 
+        : EventBase("", "", "", "", ""), id(id) 
     {}
 };
 
