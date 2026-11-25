@@ -2,40 +2,60 @@
 #include "Scripts/Models/Expression.h"
 
 #include <unordered_map>
-#include <regex>
 
-namespace {
-    std::unordered_map<std::string, std::weak_ptr<Expression>> pool;
-    bool normalize = true;
-}
-
-std::string ExpressionStore::norm_(const std::string& s) 
+namespace
 {
-    if (!normalize) return s;
-    // Remove all whitespace
-    static const std::regex ws(R"REGEX(\s+)REGEX");
-    return std::regex_replace(s, ws, "");
+    // Function-local statics: avoid the static initialization order problem.
+    std::unordered_map<std::string, std::weak_ptr<Expression>>& pool()
+    {
+        static std::unordered_map<std::string, std::weak_ptr<Expression>> instance {};
+        return instance;
+    }
+
+    bool& normalize()
+    {
+        static bool enabled {true};
+        return enabled;
+    }
 }
 
-void ExpressionStore::set_normalize(bool enable) 
+// Whitespace inside quotes is part of an atom value and is kept.
+std::string ExpressionStore::norm_(const std::string& s)
 {
-    normalize = enable;
+    if (!normalize()) return s;
+
+    std::string out;
+    out.reserve(s.size());
+    bool in_quotes = false;
+    for (char c : s)
+    {
+        if (c == '"') in_quotes = !in_quotes;
+        const bool whitespace = c == ' ' || c == '\t' || c == '\n' || c == '\r';
+        if (in_quotes || !whitespace)
+            out.push_back(c);
+    }
+    return out;
 }
 
-std::shared_ptr<Expression> ExpressionStore::get_or_create(const std::string& src) 
+void ExpressionStore::set_normalize(bool enable)
+{
+    normalize() = enable;
+}
+
+std::shared_ptr<Expression> ExpressionStore::get_or_create(const std::string& src)
 {
     const std::string key = norm_(src);
 
-    if (auto it = pool.find(key); it != pool.end()) 
-        if (auto existing = it->second.lock()) 
+    if (auto it = pool().find(key); it != pool().end())
+        if (auto existing = it->second.lock())
             return existing;
 
     auto created = std::make_shared<Expression>(src);
-    pool[key] = created;
+    pool()[key] = created;
     return created;
 }
 
-void ExpressionStore::clear() 
+void ExpressionStore::clear()
 {
-    pool.clear();
+    pool().clear();
 }

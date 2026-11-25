@@ -4,6 +4,7 @@
 #include <functional>
 #include <stdexcept>
 #include <regex>
+#include <utility>
 
 #include "Scripts/Models/Expression.h"
 #include "Scripts/Models/EventContext/EventContext.h"
@@ -18,10 +19,14 @@ std::string Expression::get_src_string() const
     return src_;
 } 
 
-Expression::EvalAtomFn Expression::eval_atom_ = nullptr;
+Expression::EvalAtomFn& Expression::eval_atom_()
+{
+    static EvalAtomFn fn {};
+    return fn;
+}
 
-void Expression::set_eval_atom(EvalAtomFn fn) {
-    eval_atom_ = fn;
+Expression::EvalAtomFn Expression::set_eval_atom(EvalAtomFn fn) {
+    return std::exchange(eval_atom_(), std::move(fn));
 }
 
 /* ========================= */
@@ -186,7 +191,7 @@ bool Expression::evaluate(const EventContext& ctx) const
             // thunk captures by value + references to memo/ctx/eval_atom
             stack.push_back([key, ct, cv, &memo, &ctx]() -> bool {
                 if (auto it = memo.find(key); it != memo.end()) return it->second;
-                bool res = eval_atom_(ct, cv, ctx); // TODO: Implement global or specific handler to evaluate conditions
+                bool res = eval_atom_()(ct, cv, ctx); // TODO: Implement global or specific handler to evaluate conditions
                 memo.emplace(key, res);
                 return res;
             });

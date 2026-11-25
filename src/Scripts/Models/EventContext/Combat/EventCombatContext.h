@@ -7,10 +7,9 @@ class EventCombatContext : public EventContext {
     public:
         std::vector<std::string> targets{};
 
-        EventCombatContext(std::string pEvent_type, 
-            std::string pTrigger_source, 
-            std::vector<std::string> pTargets)
-            : EventContext(pEvent_type, pTrigger_source),
-              targets(std::move(pTargets))
-        {}
+        EventCombatContext(std::string pEvent_type,
+            std::string pTrigger_source,
+            std::vector<std::string> pTargets);
+
+        void derive_from(const EventContext& parent, DerivationKind kind) override;
 };

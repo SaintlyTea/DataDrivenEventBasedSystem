@@ -4,10 +4,15 @@
 EventCombatBase::EventCombatBase(
     std::string pId,
     std::string pName,
-    std::string pSource,
-    std::string pTrigger,
+    std::weak_ptr<IEventOwner> pSource,
+    std::weak_ptr<IEventOwner> pOwner,
+    std::vector<std::string> pTrigger,
     std::string pConditionString,
+    TargetingStrategy pTargetingStrategy,
     std::vector<std::string> pTags,
+    std::string pType,
+    std::string pFollowUpTrigger,
+    int pPriority,
     bool pEnableStacks,
     int pMaxStacks,
     int pCurrentStacks,
@@ -15,21 +20,26 @@ EventCombatBase::EventCombatBase(
     bool pResetable,
     int pDurationTurnsLeft,
     int pCdTurnsLeft,
-    int pCdBase)
-    : EventBase(pId, pName, pSource, pTrigger, pConditionString, pTags),
-      enabled_stacks(pEnableStacks),
-      max_stacks(pMaxStacks),
-      current_stacks(pCurrentStacks),
-      persists_combat(pPersistsCombat),
-      resetable(pResetable),
-      duration_turns_left(pDurationTurnsLeft),
-      cd_turns_left(pCdTurnsLeft),
-      cd_base(pCdBase)
+    int pCdBase,
+    std::string pInstanceId,
+    std::string pAnnouncementTrigger)
+    : EventBase(pId, pName, pSource, pTrigger, pConditionString, pTags, pType, pFollowUpTrigger, pPriority,
+                pInstanceId, pAnnouncementTrigger),
+        owner(pOwner),
+        targeting_strategy(pTargetingStrategy),
+        enabled_stacks(pEnableStacks),
+        max_stacks(pMaxStacks),
+        current_stacks(pCurrentStacks),
+        persists_combat(pPersistsCombat),
+        resetable(pResetable),
+        duration_turns_left(pDurationTurnsLeft),
+        cd_turns_left(pCdTurnsLeft),
+        cd_base(pCdBase)
 {}
 
-void EventCombatBase::execute_(const EventContext& ctx)
+void EventCombatBase::execute_(EventContext& ctx)
 {
-    const EventCombatContext* combat_ctx = dynamic_cast<const EventCombatContext*>(&ctx);
+    EventCombatContext* combat_ctx = dynamic_cast<EventCombatContext*>(&ctx);
     if (combat_ctx)
         execute_combat_(*combat_ctx);
 }

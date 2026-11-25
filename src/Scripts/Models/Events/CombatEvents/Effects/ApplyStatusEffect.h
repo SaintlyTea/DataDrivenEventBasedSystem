@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Scripts/Models/Events/CombatEvents/EventCombatBase.h"
-#include <iostream>
 
 class ApplyEffect : public EventCombatBase {
 public:
@@ -10,19 +9,15 @@ public:
     ApplyEffect(
         std::string pId,
         std::string pName,
-        std::string pSource,
-        std::string pTrigger,
+        std::weak_ptr<IEventOwner> pSource,
+        std::weak_ptr<IEventOwner> pOwner,
+        std::vector<std::string> pTrigger,
         std::string pConditionString,
         std::string pStatusId)
-        : EventCombatBase(pId, pName, pSource, pTrigger, pConditionString),
+        : EventCombatBase(pId, pName, pSource, pOwner, pTrigger, pConditionString),
           status_id(pStatusId)
     {}
 
 protected:
-    void execute_combat_(const EventCombatContext& ctx) override
-    {
-        std::cout << "[ApplyEffect] '" << get_name() 
-                  << "' applying status '" << status_id 
-                  << "' to " << ctx.targets.size() << " target(s)\n";
-    }
+    void execute_combat_(EventCombatContext& ctx) override;
 };

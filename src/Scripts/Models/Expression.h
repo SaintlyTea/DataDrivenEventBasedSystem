@@ -8,13 +8,15 @@
 
 class Expression
 {
-private:
-    std::vector<std::string> postfix_{};
-    const std::string src_;
+public:
     // Temporary fix/filler for global state manager or other solutions
     using EvalAtomFn = std::function<bool(const std::string&, const std::string&, const EventContext&)>;
 
-    static EvalAtomFn eval_atom_;
+private:
+    std::vector<std::string> postfix_{};
+    const std::string src_;
+    // Function-local static: avoids the static initialization order problem.
+    static EvalAtomFn& eval_atom_();
 
     std::function<bool()> pop_(std::vector<std::function<bool()>>& tokenList) const;
     bool is_atom_(const std::string& tok) const;
@@ -34,5 +36,6 @@ public:
     bool evaluate(const EventContext& ctx) const;
     std::string get_src_string() const;
 
-    static void set_eval_atom(EvalAtomFn fn);
+    // Returns the previously set evaluator.
+    static EvalAtomFn set_eval_atom(EvalAtomFn fn);
 };

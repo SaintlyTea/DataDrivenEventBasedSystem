@@ -1,6 +1,10 @@
 build/
+docs/Reviews/
+*/TODOs.md
 .cache/
 *.exe
 *.obj
 *.o
+*.patch
+*.zip
 .vscode

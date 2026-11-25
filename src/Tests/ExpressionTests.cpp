@@ -10,12 +10,13 @@ static std::unordered_map<std::string, bool> atom_results;
 
 static struct ExpressionTestSetup {
     ExpressionTestSetup() {
-        Expression::set_eval_atom([](const std::string& type, const std::string& value, const EventContext& ctx) {
+        Expression::set_eval_atom([](const std::string& type, const std::string& value, const EventContext&) {
             std::string key = type + ":" + value;
             auto it = atom_results.find(key);
             if (it != atom_results.end()) return it->second;
             // In case of testing short circuiting, it should show an error
             REQUIRE(false);
+            return false; // unreachable, but satisfies the compiler
         });
     }
 } expression_test_setup;
@@ -33,9 +34,9 @@ static void clear_atoms()
 }
 
 // Minimal context - content doesn't matter for expression tests
-static EventContext make_ctx()
+static std::unique_ptr<EventContext> make_ctx()
 {
-    return EventContext("test", "unit_01");
+    return std::make_unique<EventContext>("test", "unit_01");
 }
 
 // ===========================
@@ -45,7 +46,7 @@ TEST_CASE("Empty expression returns true", "[expression]")
 {
     clear_atoms();
     auto expr = ExpressionStore::get_or_create("");
-    REQUIRE(expr->evaluate(make_ctx()) == true);
+    REQUIRE(expr->evaluate(*make_ctx()) == true);
 }
 
 // ===========================
@@ -56,7 +57,7 @@ TEST_CASE("Single atom - true", "[expression]")
     clear_atoms();
     set_atom("WEEKDAY", "MONDAY", true);
     auto expr = ExpressionStore::get_or_create("{\"WEEKDAY\",\"MONDAY\"}");
-    REQUIRE(expr->evaluate(make_ctx()) == true);
+    REQUIRE(expr->evaluate(*make_ctx()) == true);
 }
 
 TEST_CASE("Single atom - false", "[expression]")
@@ -64,7 +65,7 @@ TEST_CASE("Single atom - false", "[expression]")
     clear_atoms();
     set_atom("WEEKDAY", "MONDAY", false);
     auto expr = ExpressionStore::get_or_create("{\"WEEKDAY\",\"MONDAY\"}");
-    REQUIRE(expr->evaluate(make_ctx()) == false);
+    REQUIRE(expr->evaluate(*make_ctx()) == false);
 }
 
 // ===========================
@@ -76,7 +77,7 @@ TEST_CASE("AND - both true", "[expression]")
     set_atom("A", "1", true);
     set_atom("B", "2", true);
     auto expr = ExpressionStore::get_or_create("{\"A\",\"1\"} * {\"B\",\"2\"}");
-    REQUIRE(expr->evaluate(make_ctx()) == true);
+    REQUIRE(expr->evaluate(*make_ctx()) == true);
 }
 
 TEST_CASE("AND - left false short circuits", "[expression]")
@@ -86,7 +87,7 @@ TEST_CASE("AND - left false short circuits", "[expression]")
     // B is not set - if short circuit works, it won't be evaluated
     // and we won't get a wrong result from the default false
     auto expr = ExpressionStore::get_or_create("{\"A\",\"1\"} * {\"B\",\"2\"}");
-    REQUIRE(expr->evaluate(make_ctx()) == false);
+    REQUIRE(expr->evaluate(*make_ctx()) == false);
 }
 
 TEST_CASE("AND - left true right false", "[expression]")
@@ -95,7 +96,7 @@ TEST_CASE("AND - left true right false", "[expression]")
     set_atom("A", "1", true);
     set_atom("B", "2", false);
     auto expr = ExpressionStore::get_or_create("{\"A\",\"1\"} * {\"B\",\"2\"}");
-    REQUIRE(expr->evaluate(make_ctx()) == false);
+    REQUIRE(expr->evaluate(*make_ctx()) == false);
 }
 
 // ===========================
@@ -107,7 +108,7 @@ TEST_CASE("OR - left true short circuits", "[expression]")
     set_atom("A", "1", true);
     // B not set - if short circuit works, result is still true
     auto expr = ExpressionStore::get_or_create("{\"A\",\"1\"} + {\"B\",\"2\"}");
-    REQUIRE(expr->evaluate(make_ctx()) == true);
+    REQUIRE(expr->evaluate(*make_ctx()) == true);
 }
 
 TEST_CASE("OR - left false right true", "[expression]")
@@ -116,7 +117,7 @@ TEST_CASE("OR - left false right true", "[expression]")
     set_atom("A", "1", false);
     set_atom("B", "2", true);
     auto expr = ExpressionStore::get_or_create("{\"A\",\"1\"} + {\"B\",\"2\"}");
-    REQUIRE(expr->evaluate(make_ctx()) == true);
+    REQUIRE(expr->evaluate(*make_ctx()) == true);
 }
 
 TEST_CASE("OR - both false", "[expression]")
@@ -126,7 +127,7 @@ TEST_CASE("OR - both false", "[expression]")
     set_atom("B", "2", false);
 
     auto expr = ExpressionStore::get_or_create("{\"A\",\"1\"} + {\"B\",\"2\"}");
-    REQUIRE(expr->evaluate(make_ctx()) == false);
+    REQUIRE(expr->evaluate(*make_ctx()) == false);
 }
 
 // ===========================
@@ -137,7 +138,7 @@ TEST_CASE("NOT - negates true to false", "[expression]")
     clear_atoms();
     set_atom("A", "1", true);
     auto expr = ExpressionStore::get_or_create("-{\"A\",\"1\"}");
-    REQUIRE(expr->evaluate(make_ctx()) == false);
+    REQUIRE(expr->evaluate(*make_ctx()) == false);
 }
 
 TEST_CASE("NOT - negates false to true", "[expression]")
@@ -145,7 +146,7 @@ TEST_CASE("NOT - negates false to true", "[expression]")
     clear_atoms();
     set_atom("A", "1", false);
     auto expr = ExpressionStore::get_or_create("-{\"A\",\"1\"}");
-    REQUIRE(expr->evaluate(make_ctx()) == true);
+    REQUIRE(expr->evaluate(*make_ctx()) == true);
 }
 
 // ===========================
@@ -158,7 +159,7 @@ TEST_CASE("Compound - (A AND B) OR C, only C true", "[expression]")
     set_atom("B", "2", false);
     set_atom("C", "3", true);
     auto expr = ExpressionStore::get_or_create("({\"A\",\"1\"} * {\"B\",\"2\"}) + {\"C\",\"3\"}");
-    REQUIRE(expr->evaluate(make_ctx()) == true);
+    REQUIRE(expr->evaluate(*make_ctx()) == true);
 }
 
 TEST_CASE("Compound - NOT A AND B", "[expression]")
@@ -167,5 +168,26 @@ TEST_CASE("Compound - NOT A AND B", "[expression]")
     set_atom("A", "1", false);
     set_atom("B", "2", true);
     auto expr = ExpressionStore::get_or_create("-{\"A\",\"1\"} * {\"B\",\"2\"}");
-    REQUIRE(expr->evaluate(make_ctx()) == true);
+    REQUIRE(expr->evaluate(*make_ctx()) == true);
+}
+// ===========================
+// ExpressionStore caching
+// ===========================
+TEST_CASE("ExpressionStore - whitespace inside an atom value is significant", "[expression][store]")
+{
+    clear_atoms();
+    auto spaced = ExpressionStore::get_or_create(R"({"STATUS","Fire Ball"})");
+    auto joined = ExpressionStore::get_or_create(R"({"STATUS","FireBall"})");
+
+    REQUIRE(spaced != joined);
+    REQUIRE(spaced->get_src_string() == R"({"STATUS","Fire Ball"})");
+}
+
+TEST_CASE("ExpressionStore - whitespace between tokens is ignored", "[expression][store]")
+{
+    clear_atoms();
+    auto spaced = ExpressionStore::get_or_create(R"( {"A","B"} * { "C" , "D" } )");
+    auto tight  = ExpressionStore::get_or_create(R"({"A","B"}*{"C","D"})");
+
+    REQUIRE(spaced == tight);
 }

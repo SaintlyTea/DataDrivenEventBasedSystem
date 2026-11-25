@@ -17,8 +17,8 @@ TEST_CASE("DamageCalcData - flat and percent accumulate on merge", "[payload]")
     DamageCalcData b;
     b.flat = 5.0f; b.percent = 0.2f;
 
-    auto result = a.merge_with(b);
-    auto& r = static_cast<DamageCalcData&>(*result);
+    REQUIRE(a.merge_from(b));
+    auto& r = a;
 
     REQUIRE(r.flat    == 15.0f);
     REQUIRE(r.percent == Catch::Approx(0.3f));
@@ -29,8 +29,8 @@ TEST_CASE("DamageCalcData - existing base is kept if set", "[payload]")
     DamageCalcData a; a.base = 20.0f;
     DamageCalcData b; b.base = 10.0f;
 
-    auto result = a.merge_with(b);
-    auto& r = static_cast<DamageCalcData&>(*result);
+    REQUIRE(a.merge_from(b));
+    auto& r = a;
 
     REQUIRE(r.base == 20.0f);
 }
@@ -40,8 +40,8 @@ TEST_CASE("DamageCalcData - other base used if existing is zero", "[payload]")
     DamageCalcData a; a.base = 0.0f;
     DamageCalcData b; b.base = 10.0f;
 
-    auto result = a.merge_with(b);
-    auto& r = static_cast<DamageCalcData&>(*result);
+    REQUIRE(a.merge_from(b));
+    auto& r = a;
 
     REQUIRE(r.base == 10.0f);
 }
@@ -51,8 +51,7 @@ TEST_CASE("DamageCalcData - incompatible type returns nullptr", "[payload]")
     DamageCalcData a;
     DamageTakenData b;
 
-    auto result = a.merge_with(b);
-    REQUIRE(result == nullptr);
+    REQUIRE_FALSE(a.merge_from(b));
 }
 
 // ===========================
@@ -63,8 +62,8 @@ TEST_CASE("DamageTakenData - flat and percent accumulate on merge", "[payload]")
     DamageTakenData a; a.flat = 3.0f; a.percent = 0.05f;
     DamageTakenData b; b.flat = 2.0f; b.percent = 0.10f;
 
-    auto result = a.merge_with(b);
-    auto& r = static_cast<DamageTakenData&>(*result);
+    REQUIRE(a.merge_from(b));
+    auto& r = a;
 
     REQUIRE(r.flat    == 5.0f);
     REQUIRE(r.percent == Catch::Approx(0.15f));
@@ -75,8 +74,7 @@ TEST_CASE("DamageTakenData - incompatible type returns nullptr", "[payload]")
     DamageTakenData a;
     DamageCalcData b;
 
-    auto result = a.merge_with(b);
-    REQUIRE(result == nullptr);
+    REQUIRE_FALSE(a.merge_from(b));
 }
 
 // ===========================
@@ -134,4 +132,4 @@ TEST_CASE("EventContext - incompatible merge keeps existing payload unchanged", 
 
     auto* result = static_cast<DamageCalcData*>(ctx.get_payload("damage"));
     REQUIRE(result->flat == 10.0f); // unchanged
-}
+}

@@ -29,7 +29,7 @@ When multiple events are queued in response to the same trigger, they are ordere
 7. **Registration order within the owning object's own list of events** — resolves ties when one owner has multiple events sharing the same definition id (e.g. two different `Sequence` composites, both typed `Sequence`, distinguished only by their position in that owner's own list)
 8. **Instance id** — the final fallback, used only when two different owners are identical at every level above
 
-This chain only affects ordering within the normal (FIFO) queue. Barrier (LIFO) operations are unaffected, since they are intended to execute immediately regardless of sibling ordering.
+The chain orders the events placed onto a queue together. Events already waiting in the barrier (LIFO) lane are never re-sorted against newly placed ones, since they are intended to execute immediately regardless of sibling ordering.
 
 ---
 
